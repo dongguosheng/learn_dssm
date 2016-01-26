@@ -83,20 +83,22 @@ class DSSM(object):
         ]
 
 class HashLaryer(object):
-    def __init__(self, rng, input, n_in, n_bit, W=None, b=None):
-        if W is None:
-            W_vals = np.asarray(
-                    rng.randn(n_in, n_bit),
-                    dtype=theano.config.floatX
-                    )
-            W = theano.shared(value=W_vals, name='W', borrow=True)
-        if b is None:
-            b_vals = np.zeros((n_bit, ), dtype=theano.config.floatX)
-            b = theano.shared(value=b_vals, name='b', borrow=True)
-        self.W = W
-        self.b = b
+    def __init__(self, rng, input, hash_params):
+        self.W, self.b = hash_params
         self.output = (T.dot(input, self.W) + self.b) / 2
-        self.params = [self.W, self.b]
+        self.hash_params = hash_params
+
+def init_hash_params(n_in, n_bit):
+    params = []
+    W_vals = np.asarray(
+            np.random.randn(n_in, n_bit),
+            dtype=theano.config.floatX
+            )
+    params.append(theano.shared(value=W_vals, name='W', borrow=True))
+    b_vals = np.zeros((n_bit, ), dtype=theano.config.floatX)
+    params.append(theano.shared(value=b_vals, name='b', borrow=True))
+    return params
+hash_params = init_hash_params(200, 48)
 
 class DSSMHash(object):
     def __init__(self, rng, querys, pos_neg_docs, query_index, doc_index, lr):
@@ -104,8 +106,8 @@ class DSSMHash(object):
         query_output = querys
         pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200)
         pos_neg_docs_output = pos_neg_docs_rep.output
-        hash_layer_query = HashLaryer(rng, query_output, 200, 48)
-        hash_layer_doc = HashLaryer(rng, pos_neg_docs_output, 200, 48)
+        hash_layer_query = HashLaryer(rng, query_output, hash_params)
+        hash_layer_doc = HashLaryer(rng, pos_neg_docs_output, hash_params)
         relax_bits_query = hash_layer_query.output
         relax_bits_doc = hash_layer_doc.output
         
@@ -115,7 +117,7 @@ class DSSMHash(object):
         self.st = T.nnet.softmax(self.sim_rs)
         self.cost = -T.sum( T.log( self.st[:, 0] ) ) / self.st.shape[0]
         
-        self.params = pos_neg_docs_rep.params + hash_layer_query.params
+        self.params = pos_neg_docs_rep.params + hash_params
         self.grad_params_doc = T.grad(self.cost, self.params)
         self.updates = [
             (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_doc)
@@ -136,7 +138,8 @@ def compile_func():
 
     train = theano.function(
         inputs  = [T_query_index, T_doc_index, T_query, T_pos_neg_doc],
-        outputs = [dssm.sim_rs, dssm.st, dssm.cost, dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5]],
+        outputs = [dssm.sim_rs, dssm.st, dssm.cost, 
+                   dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5], dssm.params[6]],
         updates = dssm.updates,
         allow_input_downcast=True,
         on_unused_input='ignore'
@@ -184,11 +187,13 @@ def train_dssm():
         if epoch > 0 and epoch % 10 == 0:
             np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                           d_h2_w=results[5], d_h2_b=results[6], 
-                                          d_h3_w=results[7], d_h3_b=results[8])
+                                          d_h3_w=results[7], d_h3_b=results[8], 
+                                          hash_w=result[9], hash_b=result[10])
         print 'Cost: %f' % cost
     np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                   d_h2_w=results[5], d_h2_b=results[6], 
-                                  d_h3_w=results[7], d_h3_b=results[8])
+                                  d_h3_w=results[7], d_h3_b=results[8],
+                                  hash_w=result[9], hash_b=result[10])
 
 def main():
     train_dssm()
