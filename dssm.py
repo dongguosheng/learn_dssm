@@ -85,15 +85,24 @@ class DSSM(object):
 class HashLaryer(object):
     def __init__(self, rng, input, hash_params):
         self.W, self.b = hash_params
-        self.output = (T.dot(input, self.W) + self.b) / 2
+        # input = input / T.sqrt(T.sum(T.sqr(input))) # ?
+        self.output = T.dot(input, self.W) + self.b
         self.hash_params = hash_params
 
 def init_hash_params(n_in, n_bit):
     params = []
     W_vals = np.asarray(
-            np.random.randn(n_in, n_bit),
+            np.random.uniform(
+                low  = -np.sqrt(6. / (n_in + n_bit)),
+                high = np.sqrt(6. / (n_in + n_bit)),
+                size = (n_in, n_bit)
+                ),
             dtype=theano.config.floatX
             )
+    # W_vals = np.asarray(
+    #         np.random.randn(n_in, n_bit),
+    #        dtype=theano.config.floatX
+    #         )
     params.append(theano.shared(value=W_vals, name='W', borrow=True))
     b_vals = np.zeros((n_bit, ), dtype=theano.config.floatX)
     params.append(theano.shared(value=b_vals, name='b', borrow=True))
@@ -124,7 +133,7 @@ class DSSMHash(object):
         ]
     
     def cal_dot(self, query_idx, doc_idx, Q, D):
-        return T.dot( Q[query_idx], D[doc_idx].T)
+        return T.dot( Q[query_idx], D[doc_idx].T) / 2
         
 def compile_func():
     # Compile Theano Function
@@ -139,7 +148,7 @@ def compile_func():
     train = theano.function(
         inputs  = [T_query_index, T_doc_index, T_query, T_pos_neg_doc],
         outputs = [dssm.sim_rs, dssm.st, dssm.cost, 
-                   dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5], dssm.params[6]],
+                   dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5], dssm.params[6], dssm.params[7]],
         updates = dssm.updates,
         allow_input_downcast=True,
         on_unused_input='ignore'
