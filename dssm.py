@@ -178,9 +178,9 @@ def train_dssm():
         for query_feat, doc_feat in DataIter(feat_mat, batch_size, n_neg, n_dim_query, n_dim_doc):
             results = dssm_train(query_index, doc_index, query_feat, doc_feat)
             cost += results[2]
-            print 'cos: ' + str(results[0])
-            print 'st: ' + str(results[1])
-            print 'cost: ' + str(results[2])
+            # print 'cos: ' + str(results[0])
+            # print 'st: ' + str(results[1])
+            # print 'cost: ' + str(results[2])
         if epoch > 0 and epoch % 10 == 0:
             np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                           d_h2_w=results[5], d_h2_b=results[6], 
