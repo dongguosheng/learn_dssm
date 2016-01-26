@@ -60,9 +60,9 @@ class CosineLayer(object):
         
 class Representation(object):
     def __init__(self, rng, input, n_in, n_hidden1, n_hidden2, n_out):
-        hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, activation=T.nnet.sigmoid)
-        hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, activation=T.nnet.sigmoid)
-        hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, activation=T.nnet.sigmoid)
+        hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, activation=T.tanh)
+        hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, activation=T.tanh)
+        hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, activation=T.tanh)
         self.output = hidden_layer3.output
         self.params = hidden_layer1.params + hidden_layer2.params + hidden_layer3.params
         
@@ -83,10 +83,10 @@ class DSSM(object):
         ]
 
 class HashLaryer(object):
-    def __init__(self, rng, input, hash_params):
+    def __init__(self, rng, input, hash_params, activation=T.tanh):
         self.W, self.b = hash_params
         # input = input / T.sqrt(T.sum(T.sqr(input))) # ?
-        self.output = T.dot(input, self.W) + self.b
+        self.output = activation(T.dot(input, self.W) + self.b)
         self.hash_params = hash_params
 
 def init_hash_params(n_in, n_bit):
@@ -131,7 +131,7 @@ class DSSMHash(object):
         self.updates = [
             (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_doc)
         ]
-    
+        
     def cal_dot(self, query_idx, doc_idx, Q, D):
         return T.dot( Q[query_idx], D[doc_idx].T) / 2
         
