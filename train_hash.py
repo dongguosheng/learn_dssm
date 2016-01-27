@@ -37,7 +37,7 @@ class HashLaryer(object):
         self.hash_params = hash_params
 
 class DSSMHash(object):
-    def __init__(self, rng, querys, pos_neg_docs, query_index, doc_index, params_list, lr=lr):
+    def __init__(self, rng, querys, pos_neg_docs, query_index, doc_index, lr, params_list):
         # query_rep = Representation(rng, querys).output
         query_output = querys
         pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200, params_list=params_list)
@@ -68,15 +68,16 @@ def compile_func():
     T_pos_neg_doc = T.matrix('pos_neg_doc', dtype='float32')
     T_query_index = T.matrix('query_index', dtype='int32')
     T_doc_index = T.matrix('doc_index', dtype='int32')
+    T_lr = T.scalar('lr', dtype='float32')
     rng = np.random.RandomState(1234)
     params = np.load('params_50.npz')
 
     params_list = [params['d_h1_w'], params['d_h1_b'], params['d_h2_w'], params['d_h2_b'], params['d_h3_w'], params['d_h3_b']]
     params_list = [theano.shared(param, borrow = True) for param in params_list]
-    dssm_hash = DSSMHash(rng, T_query, T_pos_neg_doc, T_query_index, T_doc_index, params_list, lr=lr)
+    dssm_hash = DSSMHash(rng, T_query, T_pos_neg_doc, T_query_index, T_doc_index, T_lr, params_list)
 
     train_hash = theano.function(
-        inputs  = [T_query_index, T_doc_index, T_query, T_pos_neg_doc],
+        inputs  = [T_query_index, T_doc_index, T_query, T_pos_neg_doc, T_lr],
         outputs = [dssm_hash.sim_rs, dssm_hash.st, dssm_hash.cost, 
                    dssm_hash.params[0], dssm_hash.params[1], dssm_hash.params[2], dssm_hash.params[3], dssm_hash.params[4], dssm_hash.params[5], 
                    dssm_hash.params[6], dssm_hash.params[7]],
@@ -94,11 +95,12 @@ def train_dssm_hash():
     data = np.load(npz_file)
     feat_mat = data['train_mat']
     print 'train data size: %d' % feat_mat.shape[0]
+    global lr
     for epoch in range(n_epoch):
         print 'epoch %d' % epoch
         cost = 0.0
         for query_feat, doc_feat in DataIter(feat_mat, batch_size, n_neg, n_dim_query, n_dim_doc):
-            results = dssm_hash_train(query_index, doc_index, query_feat, doc_feat)
+            results = dssm_hash_train(query_index, doc_index, query_feat, doc_feat, lr)
             cost += results[2]
             # print 'cos: ' + str(results[0])
             # print 'st: ' + str(results[1])
