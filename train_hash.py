@@ -57,7 +57,7 @@ class DSSMHash(object):
         self.params_update = hash_params   # only update hash layer weight
         self.grad_params_hash = T.grad(self.cost, self.params_update)
         self.updates = [
-            (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_hash)
+            (param, param - lr * grad_param) for param, grad_param in zip(self.params_update, self.grad_params_hash)
         ]
 
     def cal_dot(self, query_idx, doc_idx, Q, D):
