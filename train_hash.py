@@ -53,10 +53,11 @@ class DSSMHash(object):
         self.st = T.nnet.softmax(self.sim_rs)
         self.cost = -T.sum( T.log( self.st[:, 0] ) ) / self.st.shape[0]
         
-        self.params = pos_neg_docs_rep.params + hash_params
-        self.grad_params_doc = T.grad(self.cost, self.params)
+        # self.params = pos_neg_docs_rep.params + hash_params
+        self.params = hash_params   # only update hash layer weight
+        self.grad_params_hash = T.grad(self.cost, self.params)
         self.updates = [
-            (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_doc)
+            (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_hash)
         ]
 
     def cal_dot(self, query_idx, doc_idx, Q, D):
