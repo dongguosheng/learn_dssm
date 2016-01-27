@@ -40,7 +40,7 @@ class DSSMHash(object):
     def __init__(self, rng, querys, pos_neg_docs, query_index, doc_index, lr, params_list):
         # query_rep = Representation(rng, querys).output
         query_output = querys
-        pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200, params_list=params_list)
+        pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200, params_list=params_list, activation=T.nnet.sigmoid)
         pos_neg_docs_output = pos_neg_docs_rep.output
         hash_layer_query = HashLaryer(query_output, hash_params)
         hash_layer_doc = HashLaryer(pos_neg_docs_output, hash_params)

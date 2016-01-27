@@ -59,16 +59,16 @@ class CosineLayer(object):
         return T.dot( Q[query_idx], D[doc_idx].T) / T.outer(norm_q, norm_d)  
         
 class Representation(object):
-    def __init__(self, rng, input, n_in, n_hidden1, n_hidden2, n_out, params_list=None):
+    def __init__(self, rng, input, n_in, n_hidden1, n_hidden2, n_out, params_list=None, activation=T.nnet.sigmoid):
         if params_list is None:
-            hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, activation=T.tanh)
-            hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, activation=T.tanh)
-            hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, activation=T.tanh)
+            hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, activation=activation)
+            hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, activation=activation)
+            hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, activation=activation)
         else:
             W1, b1, W2, b2, W3, b3 = params_list
-            hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, W=W1, b=b1, activation=T.tanh)
-            hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, W=W2, b=b2, activation=T.tanh)
-            hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, W=W3, b=b3, activation=T.tanh)
+            hidden_layer1 = HiddenLayer(rng, input, n_in, n_hidden1, W=W1, b=b1, activation=activation)
+            hidden_layer2 = HiddenLayer(rng, hidden_layer1.output, n_hidden1, n_hidden2, W=W2, b=b2, activation=activation)
+            hidden_layer3 = HiddenLayer(rng, hidden_layer2.output, n_hidden2, n_out, W=W3, b=b3, activation=activation)
         self.output = hidden_layer3.output
         self.params = hidden_layer1.params + hidden_layer2.params + hidden_layer3.params
         
