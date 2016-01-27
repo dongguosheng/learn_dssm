@@ -4,9 +4,15 @@ import numpy as np
 import theano
 import theano.tensor as T
 from dssm import Representation, DataIter
+from dssm import query_index, doc_index
 
 hash_input_dim = 200
 n_bit = 48
+lr = 0.01
+batch_size = 1
+n_neg = 5
+n_dim_query = 200
+n_dim_doc = 4096
 
 def init_hash_params(rng, n_in, n_bit):
     params = []
@@ -35,8 +41,8 @@ class DSSMHash(object):
         query_output = querys
         pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200, params_list=params_list)
         pos_neg_docs_output = pos_neg_docs_rep.output
-        hash_layer_query = HashLaryer(rng, query_output, hash_params)
-        hash_layer_doc = HashLaryer(rng, pos_neg_docs_output, hash_params)
+        hash_layer_query = HashLaryer(query_output, hash_params)
+        hash_layer_doc = HashLaryer(pos_neg_docs_output, hash_params)
         relax_bits_query = hash_layer_query.output
         relax_bits_doc = hash_layer_doc.output
         
@@ -52,6 +58,9 @@ class DSSMHash(object):
             (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_doc)
         ]
 
+    def cal_dot(self, query_idx, doc_idx, Q, D):
+  	    return T.dot( Q[query_idx], D[doc_idx].T) / 2
+
 def compile_func():
     # Compile Theano Function
     T_query = T.matrix('query', dtype='float32')
@@ -60,7 +69,9 @@ def compile_func():
     T_doc_index = T.matrix('doc_index', dtype='int32')
     rng = np.random.RandomState(1234)
     params = np.load('params_50.npz')
+
     params_list = [params['d_h1_w'], params['d_h1_b'], params['d_h2_w'], params['d_h2_b'], params['d_h3_w'], params['d_h3_b']]
+    params_list = [theano.shared(param, borrow = True) for param in params_list]
     dssm_hash = DSSMHash(rng, T_query, T_pos_neg_doc, T_query_index, T_doc_index, params_list, lr=lr)
 
     train_hash = theano.function(
@@ -68,7 +79,7 @@ def compile_func():
         outputs = [dssm_hash.sim_rs, dssm_hash.st, dssm_hash.cost, 
                    dssm_hash.params[0], dssm_hash.params[1], dssm_hash.params[2], dssm_hash.params[3], dssm_hash.params[4], dssm_hash.params[5], 
                    dssm_hash.params[6], dssm_hash.params[7]],
-        updates = dssm.updates,
+        updates = dssm_hash.updates,
         allow_input_downcast=True,
         on_unused_input='ignore'
     )
@@ -88,10 +99,10 @@ def train_dssm_hash():
         for query_feat, doc_feat in DataIter(feat_mat, batch_size, n_neg, n_dim_query, n_dim_doc):
             results = dssm_hash_train(query_index, doc_index, query_feat, doc_feat)
             cost += results[2]
-            print 'cos: ' + str(results[0])
-            print 'st: ' + str(results[1])
-            print 'cost: ' + str(results[2])
-        if epoch > 0 and epoch % 10 == 0:
+            # print 'cos: ' + str(results[0])
+            # print 'st: ' + str(results[1])
+            # print 'cost: ' + str(results[2])
+        if epoch > 0 and epoch % 1 == 0:
             np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                           d_h2_w=results[5], d_h2_b=results[6], 
                                           d_h3_w=results[7], d_h3_b=results[8],
