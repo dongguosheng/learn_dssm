@@ -11,7 +11,7 @@ n_bit = 48
 def init_hash_params(rng, n_in, n_bit):
     params = []
     W_vals = np.asarray(
-            rng.randn( (n_in, n_bit) ),
+            rng.randn(n_in, n_bit),
             dtype=theano.config.floatX
             )
     W_vals *= 0.01
