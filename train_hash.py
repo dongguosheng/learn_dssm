@@ -16,7 +16,7 @@ def init_hash_params(rng, n_in, n_bit):
             )
     W_vals *= 0.01
     params.append(theano.shared(value=W_vals, name='W', borrow=True))
-    b_vals = 0.01 * rng.randn(n_bit, ), dtype=theano.config.floatX)
+    b_vals = np.asarray(0.01 * rng.randn(n_bit, ), dtype=theano.config.floatX)
     params.append(theano.shared(value=b_vals, name='b', borrow=True))
     return params
 
