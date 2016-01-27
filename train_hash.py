@@ -5,6 +5,7 @@ import theano
 import theano.tensor as T
 from dssm import Representation, DataIter
 from dssm import query_index, doc_index
+from lr_policy import lr_decay
 
 hash_input_dim = 200
 n_bit = 48
@@ -108,6 +109,10 @@ def train_dssm_hash():
                                           d_h3_w=results[7], d_h3_b=results[8],
                                           hash_w=results[9], hash_b=results[10])
         print 'Cost: %f' % cost
+        lr_new = lr_decay(lr, epoch, 5)
+        if lr_new != lr:
+            lr = lr_new
+            print 'lr: %f' % lr
     np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                   d_h2_w=results[5], d_h2_b=results[6], 
                                   d_h3_w=results[7], d_h3_b=results[8],
