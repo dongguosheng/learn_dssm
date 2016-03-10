@@ -42,7 +42,7 @@ class ITQ : public LSH {
             return false;
         }
 
-        std::vector<std::vector<bool> > hash(const Mat &input, Mat &pca_rs, Mat &relax) {
+        inline const std::vector<std::vector<bool> > hash(const Mat &input, Mat &pca_rs, Mat &relax) {
             std::vector<std::vector<bool> > rs;
             for(size_t i = 0; i < n_table; ++ i) {
                 std::vector<bool> hash_rs(n_bit);

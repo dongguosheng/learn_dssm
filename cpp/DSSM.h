@@ -14,7 +14,7 @@ class DSSM {
                 delete [] p_params_vec[i];
             }
         }
-        void SetDims(std::vector<size_t> _dims) {
+        inline void SetDims(std::vector<size_t> _dims) {
             dims = _dims;
         }
         bool LoadModel(const char *model_file) {
@@ -42,11 +42,11 @@ class DSSM {
             return false;
         }
 
-        std::vector<Mat> GetParams() {
+        inline const std::vector<Mat> GetParams() const {
             return params_vec;
         }
 
-        bool Predict(const Mat &input, Mat &h1_output, Mat &h2_output, Mat &h3_output) {
+        bool Predict(const Mat &input, Mat &h1_output, Mat &h2_output, Mat &h3_output) const {
             // users have to make sure h1_output, h2_output, h3_output have enough memory.
             // set bias
             h1_output = params_vec[1];

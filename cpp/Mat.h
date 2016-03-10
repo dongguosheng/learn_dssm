@@ -43,13 +43,13 @@ struct Mat: public Exp<Mat> {
         return *this;
     }
 
-    void Set(float *_dptr, size_t _n_row, size_t _n_col) {
+    inline void Set(float *_dptr, size_t _n_row, size_t _n_col) {
         dptr = _dptr;
         n_row = _n_row;
         n_col = _n_col;
     }
 
-    void Reset() {
+    inline void Reset() {
         memset(dptr, 0, sizeof(float) * n_row * n_col);
     }
 
