@@ -24,7 +24,7 @@ print query_index
 print doc_index
 
 class HiddenLayer(object):
-    def __init__(self, rng, input, n_in, n_out, W=None, b=None, activation=T.nnet.sigmoid):
+    def __init__(self, rng, input, n_in, n_out, W=None, b=None, activation=T.tanh):
         self.input = input
         if W is None:
             W_vals = np.asarray(
@@ -74,18 +74,18 @@ class Representation(object):
         
 class DSSM(object):
     def __init__(self, rng, querys, pos_neg_docs, query_index, doc_index, lr=lr):
-        # query_rep = Representation(rng, querys).output
-        query_output = querys
+        query_rep = Representation(rng, querys, n_dim_query, 256, 256, 200)
+        query_output = query_rep.output
         pos_neg_docs_rep = Representation(rng, pos_neg_docs, n_dim_doc, 2048, 2048, 200)
         pos_neg_docs_output = pos_neg_docs_rep.output
         self.sim_rs = CosineLayer(query_output, pos_neg_docs_output, query_index, doc_index).output
         self.st = T.nnet.softmax(self.sim_rs)
         self.cost = -T.sum( T.log( self.st[:, 0] ) ) / self.st.shape[0]
         
-        self.params = pos_neg_docs_rep.params
-        self.grad_params_doc = T.grad(self.cost, self.params)
+        self.params = pos_neg_docs_rep.params + query_rep.params
+        self.grad_params = T.grad(self.cost, self.params)
         self.updates = [
-            (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params_doc)
+            (param, param - lr * grad_param) for param, grad_param in zip(self.params, self.grad_params)
         ]
 
 def compile_func():
@@ -100,7 +100,8 @@ def compile_func():
     train = theano.function(
         inputs  = [T_query_index, T_doc_index, T_query, T_pos_neg_doc],
         outputs = [dssm.sim_rs, dssm.st, dssm.cost, 
-                   dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5]],
+                   dssm.params[0], dssm.params[1], dssm.params[2], dssm.params[3], dssm.params[4], dssm.params[5],
+                   dssm.params[6], dssm.params[7], dssm.params[8], dssm.params[9], dssm.params[10], dssm.params[11]],
         updates = dssm.updates,
         allow_input_downcast=True,
         on_unused_input='ignore'
@@ -128,13 +129,13 @@ class DataIter(object):
             doc_feat = doc_feat.reshape((self.n_neg+1) * self.batch_size, self.n_dim_doc)
             yield (query_feat, doc_feat)
 
-def train_dssm():
+
+dssm_train = compile_func()
+def train_dssm(mat_file, cnt, i, epoch_num):
     results = ''
-    n_epoch = 50
-    npz_file = 'tmp1_4_1.npz'
-    dssm_train = compile_func()
-    data = np.load(npz_file)
-    feat_mat = data['train_mat']
+    n_epoch = 1
+    feat_mat = np.fromfile(mat_file, dtype='float32')
+    feat_mat = feat_mat.reshape(cnt, n_dim_query + n_dim_doc*(n_neg + 1))
     print 'train data size: %d' % feat_mat.shape[0]
     for epoch in range(n_epoch):
         print 'epoch %d' % epoch
@@ -145,17 +146,35 @@ def train_dssm():
             # print 'cos: ' + str(results[0])
             # print 'st: ' + str(results[1])
             # print 'cost: ' + str(results[2])
-        if epoch > 0 and epoch % 10 == 0:
+        if epoch > 0 and epoch % 1 == 0:
             np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
                                           d_h2_w=results[5], d_h2_b=results[6], 
-                                          d_h3_w=results[7], d_h3_b=results[8])
+                                          d_h3_w=results[7], d_h3_b=results[8],
+                                          q_h1_w=results[9], q_h1_b=results[10],
+                                          q_h2_w=results[11], q_h2_b=results[12],
+                                          q_h3_w=results[13], q_h3_b=results[14])
         print 'Cost: %f' % cost
-    np.savez('params_%d' % epoch, d_h1_w=results[3], d_h1_b=results[4], 
+    np.savez('params_%d_%d' % (epoch_num, i), d_h1_w=results[3], d_h1_b=results[4], 
                                   d_h2_w=results[5], d_h2_b=results[6], 
-                                  d_h3_w=results[7], d_h3_b=results[8])
+                                  d_h3_w=results[7], d_h3_b=results[8],
+                                  q_h1_w=results[9], q_h1_b=results[10],
+                                  q_h2_w=results[11], q_h2_b=results[12],
+                                  q_h3_w=results[13], q_h3_b=results[14])
 
 def main():
-    train_dssm()
+    mat_file = './dssm_train_data/150w{i}_train_mat'
+    cnt_file = './dssm_train_data/150w{i}_cnt'
+    n_epoch = 20
+    for epoch in range(n_epoch):
+        idx_list = range(14)
+        random.shuffle(idx_list)
+        print idx_list
+        for i in idx_list:
+            print mat_file.format(i=i)
+            cnt = 0
+            with open(cnt_file.format(i=i)) as fin:
+                cnt = int(fin.next().strip())
+            train_dssm(mat_file.format(i=i), cnt, i, epoch)
     
 if __name__ == '__main__':
     main()                                    
