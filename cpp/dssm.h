@@ -1,7 +1,7 @@
 #ifndef DSSM_H
 #define DSSM_H
 
-#include "Mat.h"
+#include "mat.h"
 #include <cstdio>
 #include <vector>
 
@@ -66,5 +66,8 @@ class DSSM {
         std::vector<Mat> params_vec;
         std::vector<float*> p_params_vec;
         std::vector<size_t> dims;
+
+        DSSM(const DSSM &other);
+        DSSM& operator=(const DSSM &other);
 };
 #endif /*DSSM_H*/

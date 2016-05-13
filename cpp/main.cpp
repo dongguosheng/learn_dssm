@@ -1,9 +1,9 @@
 #include <iostream>
-#include "DSSM.h"
+#include "dssm.h"
 #include <cstdio>
 #include <cmath>
 #include <vector>
-#include "ITQ.h"
+#include "itqlsh.h"
 
 using namespace std;
 
@@ -87,18 +87,11 @@ int main() {
     delete [] p_1;
     delete [] p_2;
     delete [] input_p;
-
-    ITQ itq(64, 200, 1);
-    p_1 = NULL;
-    p_2 = NULL;
-    p_1 = new float[sizeof(float) * 200 * 64];
-    p_2 = new float[sizeof(float) * 64 * 1];
-    Mat pca_rs(p_1, 200, 64), relax(p_2, 1, 64);
-    itq.LoadModel("itq.model");
-    vector<vector<bool> > doc_hash = itq.hash(h3_output, pca_rs, relax);
-    vector<vector<bool> > query_hash = itq.hash(wordvec, pca_rs, relax);
-    size_t dist = itq.hamming_dist(doc_hash[0], query_hash[0]);
-    cout << "hamming dist " << dist << endl;
+    
+    using namespace lsh;
+    ITQLSH itqlsh(64, 200, 1, 0, 0);
+    itqlsh.LoadText("itq.model");
+    // TODO: Hash
 
     delete [] p_3;
     delete [] word_p;

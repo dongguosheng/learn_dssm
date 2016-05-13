@@ -3,21 +3,21 @@
 # Compiler Name
 CC		=	g++
 # Compile Flags
-CXXFLAGS=	-Wall -std=c++0x
+CXXFLAGS=	-Wall -std=c++0x -fopenmp
 # Include 
-INCLUDES=	
+INCLUDES=	-I.	
 # Libraries
 LIBS	=	-lcblas -latlas
 # Object Files
-OBJS	=	Main.o 
+OBJS	=	main.o 
 # Name of Executable
-TARGET	=	testMain
+TARGET	=	test_main
 # ---------------
 all:	$(TARGET)
 .cpp.o:
 	$(CC) $(CXXFLAGS) -fPIC $(LDFLAGS) $(INCLUDES) -c $<
 
-testMain:Main.cpp
+test_main:main.cpp
 	$(CC) $(CXXFLAGS) $(INCLUDES) $< -o $@ -L/usr/lib64/atlas $(LIBS)
 
 clean:
