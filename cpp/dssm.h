@@ -37,8 +37,8 @@ class DSSM {
                     params_vec[i*2+1].Set(p_params_vec[i*2+1], 1, dims[i+1]);
                 }
                 return true;
+                fclose(fp);
             }
-            fclose(fp);
             return false;
         }
 
