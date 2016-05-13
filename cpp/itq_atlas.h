@@ -21,10 +21,10 @@ class ITQ : public LSH {
             pca_vec.reserve(n_table);
             r_vec.reserve(n_table);
             for(size_t i = 0; i < n_table; ++ i) {
-                p_tmp = new float[sizeof(float) * n_dim * n_bit];
+                p_tmp = new float[n_dim * n_bit];
                 p_pca_vec.push_back(p_tmp);
                 p_tmp = NULL;
-                p_tmp = new float[sizeof(float) * n_bit * n_bit];
+                p_tmp = new float[n_bit * n_bit];
                 p_r_vec.push_back(p_tmp);
             }
             FILE *fp = fopen(model_file, "rb");
