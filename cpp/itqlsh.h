@@ -80,19 +80,25 @@ class ITQLSH {
             return rs_mat;
         }
         // pay attention to std::vector<bool>
-        inline std::vector<std::vector<bool> > Hash(const MatrixXf &input) {
-            std::vector<std::vector<bool> > bits_vec;
-            bits_vec.reserve(n_table);
-            assert(input.rows() == 1 && input.cols() == n_dim);
+        inline std::vector<MatrixXf> Hash(const MatrixXf &input) {
+            std::vector<MatrixXf> hash_mats;
+            hash_mats.reserve(n_table);
+            assert(input.cols() == n_dim);
             assert(pca_vec.size() == r_vec.size());
             assert(pca_vec.size() == static_cast<size_t>(n_table));
             for(size_t j = 0; j < pca_vec.size(); ++ j) {
-                std::vector<bool> bits(n_bit);
                 MatrixXf b_mat = (input * pca_vec[j]) * r_vec[j];
-                for(int k = 0; k < b_mat.cols(); ++ k) {
-                    bits[k] = (b_mat(0, k) > 0 ? true : false);
+                hash_mats.push_back(b_mat);
+            }
+            return hash_mats;
+        }
+        inline std::vector<std::vector<bool> > Quant(const MatrixXf &hash_mat) {
+            std::vector<std::vector<bool> > bits_vec(hash_mat.rows(), std::vector<bool>(n_bit, false));
+            # pragma omp parallel for
+            for(int i = 0; i < hash_mat.rows(); ++ i) {
+                for(int j = 0; j < hash_mat.row(i).cols(); ++ j) {
+                    bits_vec[i][j] = (hash_mat(i, j) > 0 ? true : false);
                 }
-                bits_vec.push_back(bits);
             }
             return bits_vec;
         }
