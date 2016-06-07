@@ -3,6 +3,7 @@
 
 #include <vector>
 
+namespace lsh {
 class LSH {
     public:
         inline static size_t hamming_dist(const std::vector<bool> &left, const std::vector<bool> &right) {
@@ -13,6 +14,6 @@ class LSH {
             return dist;
         }
 };
-
+}
 
 #endif /*LSH_H*/

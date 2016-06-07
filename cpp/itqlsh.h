@@ -1,8 +1,8 @@
 #ifndef ITQLSH_H
 #define ITQLSH_H
 
-#include <Eigen/Core>
-#include <Eigen/Eigen>
+#include "Eigen/Core"
+#include "Eigen/Eigen"
 #include <iostream>
 #include <fstream>
 #include <vector>
@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <string>
 #include <sstream>
+#include <cstdlib>
 
 namespace lsh {
 using namespace Eigen;
@@ -21,7 +22,8 @@ class ITQLSH {
         ITQLSH(int n_bit, int n_dim, int n_table, float sample_rate, int n_iter)
             : n_bit(n_bit), n_dim(n_dim), n_table(n_table), sample_rate(sample_rate), n_iter(n_iter) {}
         virtual ~ITQLSH() {}
-        inline void train(const MatrixXf &data_mat) {
+        inline void Train(const MatrixXf &data_mat) {
+            srand(time(NULL));
             int n_sample = int(data_mat.rows() * sample_rate);
             std::cout << "Sample Num: " << n_sample << std::endl;
             for(int i = 0; i < n_table; ++ i) {
@@ -46,9 +48,9 @@ class ITQLSH {
         }
         inline MatrixXf GetSampleMat(const MatrixXf &data_mat, int n_sample) {
             MatrixXf sample_mat(n_sample, data_mat.cols());
-            std::tr1::mt19937 rng(static_cast<unsigned int>(time(NULL)));
             std::tr1::uniform_int<int> ud(0, data_mat.rows() - 1);
             std::set<int> row_idx_set;
+            std::tr1::mt19937 rng(rand());
             int row_idx;
             while(static_cast<int>(row_idx_set.size()) < n_sample) {
                 row_idx = ud(rng);
@@ -60,7 +62,7 @@ class ITQLSH {
             return sample_mat;
         }
         inline void InitR(MatrixXf &r_mat) {
-            std::tr1::mt19937 rng(static_cast<unsigned int>(time(NULL)));
+            std::tr1::mt19937 rng(rand());
             std::tr1::normal_distribution<float> nd;
             std::tr1::variate_generator<std::tr1::mt19937, std::tr1::normal_distribution<float> > gen(rng, nd);
             for(int i = 0; i < r_mat.rows(); ++ i) {
@@ -71,7 +73,7 @@ class ITQLSH {
         }
         inline MatrixXf Sign(const MatrixXf &mat) {
             MatrixXf rs_mat(mat.rows(), mat.cols());
-            # pragma omp parallel for
+            # pragma omp parallel for collapse(2)
             for(int i = 0; i < mat.rows(); ++ i) {
                 for(int j = 0; j < mat.cols(); ++ j) {
                     rs_mat(i, j) = (mat(i, j) > 0 ? 1.0 : -1.0);
@@ -92,14 +94,16 @@ class ITQLSH {
             }
             return hash_mats;
         }
-        inline std::vector<std::vector<bool> > Quant(const MatrixXf &hash_mat) {
-            std::vector<std::vector<bool> > bits_vec(hash_mat.rows(), std::vector<bool>(n_bit, false));
-            # pragma omp parallel for
-            for(int i = 0; i < hash_mat.rows(); ++ i) {
-                for(int j = 0; j < hash_mat.row(i).cols(); ++ j) {
-                    bits_vec[i][j] = (hash_mat(i, j) > 0 ? true : false);
+        inline std::vector<std::vector<bool> > Quant(const std::vector<MatrixXf> &hash_mats) {
+            std::vector<std::vector<bool> > bits_vec(hash_mats[0].rows(), std::vector<bool>(n_bit * hash_mats.size(), false));
+            for(size_t i = 0; i < hash_mats.size(); ++ i) {
+                # pragma omp parallel for
+                for(int j = 0; j < hash_mats[i].rows(); ++ j) {
+                    for(int k = 0; k < hash_mats[i].row(j).cols(); ++ k) {
+                        bits_vec[j][k + i*n_bit] = (hash_mats[i](j, k) > 0 ? true : false);
+                    }
                 }
-            }
+            }   
             return bits_vec;
         }
         inline void SaveText(const char *filename) {
@@ -116,11 +120,11 @@ class ITQLSH {
                 fout << r_vec[i] << std::endl;
             }
         }
-        inline void LoadText(const char *filename) {
+        inline bool LoadText(const char *filename) {
             std::ifstream fin(filename);
             if(fin.fail()) {
                 std::cerr << filename << " open failed." << std::endl;
-                return;
+                return false;
             }
             std::string line;
             std::getline(fin, line);
@@ -176,6 +180,13 @@ class ITQLSH {
             }
             std::cout << "Load R Mat Complete." << std::endl;
             std::cout << "ITQ Model Load Complete." << std::endl;
+            return true;
+        }
+        inline int GetBitNum() {
+        	return n_bit;	
+        }
+        inline int GetTableNum() {
+        	return n_table;
         }
     private:
         inline void pca(const MatrixXf &sample_mat) {

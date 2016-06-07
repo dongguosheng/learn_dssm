@@ -1,10 +1,11 @@
-#ifndef ITQ_H
-#define ITQ_H
+#ifndef ITQ_ATLAS_H
+#define ITQ_ATLAS_H
 
-#include "Mat.h"
-#include "LSH.h"
+#include "mat.h"
+#include "lsh.h"
 #include <vector>
 
+namespace lsh {
 class ITQ : public LSH {
     public:
         ITQ() {}
@@ -42,14 +43,16 @@ class ITQ : public LSH {
             return false;
         }
 
-        inline const std::vector<std::vector<bool> > hash(const Mat &input, Mat &pca_rs, Mat &relax) {
+        inline const std::vector<std::vector<bool> > Hash(const mat::Mat &input, mat::Mat &pca_rs, mat::Mat &relax) {
             std::vector<std::vector<bool> > rs;
             for(size_t i = 0; i < n_table; ++ i) {
                 std::vector<bool> hash_rs(n_bit);
                 pca_rs.Reset();
                 relax.Reset();
-                pca_rs = gemm(input, pca_vec[i]);
-                relax = gemm(pca_rs, r_vec[i]);
+                // pca_rs = gemm(input, pca_vec[i]);
+                // relax = gemm(pca_rs, r_vec[i]);
+                sgemm(input, pca_vec[i], pca_rs);
+                sgemm(pca_rs, r_vec[i], relax);
                 for(size_t i = 0; i < relax.n_col; ++ i) {
                     hash_rs[i] = relax.dptr[i] > 0 ? true : false;
                 }
@@ -62,9 +65,12 @@ class ITQ : public LSH {
         size_t n_bit;
         size_t n_dim;
         size_t n_table;
-        std::vector<Mat> pca_vec;
+        std::vector<mat::Mat> pca_vec;
         std::vector<float*> p_pca_vec;
-        std::vector<Mat> r_vec;
+        std::vector<mat::Mat> r_vec;
         std::vector<float*> p_r_vec;
+        ITQ(const ITQ &other);
+        ITQ& operator=(const ITQ &other);
 };
-#endif /*ITQ_H*/
+}
+#endif /*ITQ_ATLAS_H*/

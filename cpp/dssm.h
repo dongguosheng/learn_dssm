@@ -6,6 +6,7 @@
 #include <vector>
 
 class DSSM {
+    const static int N = 3;
     public:
         DSSM() {}
         DSSM(std::vector<size_t> _dims) : dims(_dims) {}
@@ -42,28 +43,28 @@ class DSSM {
             return false;
         }
 
-        inline const std::vector<Mat> GetParams() const {
+        inline const std::vector<mat::Mat> GetParams() const {
             return params_vec;
         }
 
-        bool Predict(const Mat &input, Mat &h1_output, Mat &h2_output, Mat &h3_output) const {
+        bool Predict(const mat::Mat &input, mat::Mat &h1_output, mat::Mat &h2_output, mat::Mat &h3_output) const {
             // users have to make sure h1_output, h2_output, h3_output have enough memory.
             // set bias
             h1_output = params_vec[1];
             h2_output = params_vec[3];
             h3_output = params_vec[5];
-            h1_output = gemm(input, params_vec[0]);
-            h1_output.sigmoid();
-            h2_output = gemm(h1_output, params_vec[2]);
-            h2_output.sigmoid();
-            h3_output = gemm(h2_output, params_vec[4]);
-            h3_output.sigmoid();
+            // forward
+            sgemm(input, params_vec[0], h1_output);
+            sigmoid(h1_output);
+            sgemm(h1_output, params_vec[2], h2_output);
+            sigmoid(h2_output);
+            sgemm(h2_output, params_vec[4], h3_output);
+            sigmoid(h3_output);
             return true;
         }
 
     private:
-        const static int N = 3;
-        std::vector<Mat> params_vec;
+        std::vector<mat::Mat> params_vec;
         std::vector<float*> p_params_vec;
         std::vector<size_t> dims;
 
