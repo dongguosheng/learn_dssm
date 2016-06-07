@@ -23,20 +23,20 @@ class RHPLSH {
             : n_bit(n_bit), n_dim(n_dim), n_table(n_table) {}
         virtual ~RHPLSH() {}
         inline void Train(void) {
-			srand(time(NULL));
+            srand(time(NULL));
             for(int i = 0; i < n_table; ++ i) {
                 MatrixXf r_mat(n_dim, n_bit);
                 InitR(r_mat);
                 std::cout << "Init R Done." << std::endl;
-            	std::cout << "r_vec: " << r_mat.rows() << ", " << r_mat.cols() << std::endl;
+                std::cout << "r_vec: " << r_mat.rows() << ", " << r_mat.cols() << std::endl;
                 r_vec.push_back(r_mat);
                 std::cout << std::endl;
             }
         }
         inline void InitR(MatrixXf &r_mat) {
             std::tr1::mt19937 rng(rand());
-			std::tr1::normal_distribution<float> nd;
-    	    std::tr1::variate_generator<std::tr1::mt19937, std::tr1::normal_distribution<float> > gen(rng, nd);
+            std::tr1::normal_distribution<float> nd;
+            std::tr1::variate_generator<std::tr1::mt19937, std::tr1::normal_distribution<float> > gen(rng, nd);
             for(int i = 0; i < r_mat.rows(); ++ i) {
                 for(int j = 0; j < r_mat.cols(); ++ j) {
                     r_mat(i, j) = gen();
@@ -127,10 +127,10 @@ class RHPLSH {
             return true;
         }
         inline int GetBitNum() {
-        	return n_bit;	
+            return n_bit;    
         }
         inline int GetTableNum() {
-        	return n_table;
+            return n_table;
         }
     private:
         int n_bit;

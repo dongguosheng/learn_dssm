@@ -183,10 +183,10 @@ class ITQLSH {
             return true;
         }
         inline int GetBitNum() {
-        	return n_bit;	
+            return n_bit;    
         }
         inline int GetTableNum() {
-        	return n_table;
+            return n_table;
         }
     private:
         inline void pca(const MatrixXf &sample_mat) {
