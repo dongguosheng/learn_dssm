@@ -15,7 +15,6 @@
 #include <cstdlib>
 
 namespace lsh {
-using namespace Eigen;
 class RHPLSH {
     public:
         RHPLSH() {}
@@ -23,28 +22,28 @@ class RHPLSH {
             : n_bit(n_bit), n_dim(n_dim), n_table(n_table) {}
         virtual ~RHPLSH() {}
         inline void Train(void) {
-            srand(time(NULL));
+			srand(time(NULL));
             for(int i = 0; i < n_table; ++ i) {
-                MatrixXf r_mat(n_dim, n_bit);
+                Eigen::MatrixXf r_mat(n_dim, n_bit);
                 InitR(r_mat);
                 std::cout << "Init R Done." << std::endl;
-                std::cout << "r_vec: " << r_mat.rows() << ", " << r_mat.cols() << std::endl;
+            	std::cout << "r_vec: " << r_mat.rows() << ", " << r_mat.cols() << std::endl;
                 r_vec.push_back(r_mat);
                 std::cout << std::endl;
             }
         }
-        inline void InitR(MatrixXf &r_mat) {
+        inline void InitR(Eigen::MatrixXf &r_mat) {
             std::tr1::mt19937 rng(rand());
-            std::tr1::normal_distribution<float> nd;
-            std::tr1::variate_generator<std::tr1::mt19937, std::tr1::normal_distribution<float> > gen(rng, nd);
+			std::tr1::normal_distribution<float> nd;
+    	    std::tr1::variate_generator<std::tr1::mt19937, std::tr1::normal_distribution<float> > gen(rng, nd);
             for(int i = 0; i < r_mat.rows(); ++ i) {
                 for(int j = 0; j < r_mat.cols(); ++ j) {
                     r_mat(i, j) = gen();
                 }
             }
         }
-        inline MatrixXf Sign(const MatrixXf &mat) {
-            MatrixXf rs_mat(mat.rows(), mat.cols());
+        inline Eigen::MatrixXf Sign(const Eigen::MatrixXf &mat) {
+            Eigen::MatrixXf rs_mat(mat.rows(), mat.cols());
             # pragma omp parallel for collapse(2)
             for(int i = 0; i < mat.rows(); ++ i) {
                 for(int j = 0; j < mat.cols(); ++ j) {
@@ -54,18 +53,18 @@ class RHPLSH {
             return rs_mat;
         }
         // pay attention to std::vector<bool>
-        inline std::vector<MatrixXf> Hash(const MatrixXf &input) {
-            std::vector<MatrixXf> hash_mats;
+        inline std::vector<Eigen::MatrixXf> Hash(const Eigen::MatrixXf &input) {
+            std::vector<Eigen::MatrixXf> hash_mats;
             hash_mats.reserve(n_table);
             assert(input.cols() == n_dim);
             assert(r_vec.size() == static_cast<size_t>(n_table));
             for(size_t j = 0; j < r_vec.size(); ++ j) {
-                MatrixXf b_mat = input * r_vec[j];
+                Eigen::MatrixXf b_mat = input * r_vec[j];
                 hash_mats.push_back(b_mat);
             }
             return hash_mats;
         }
-        inline std::vector<std::vector<bool> > Quant(const std::vector<MatrixXf> &hash_mats) {
+        inline std::vector<std::vector<bool> > Quant(const std::vector<Eigen::MatrixXf> &hash_mats) {
             std::vector<std::vector<bool> > bits_vec(hash_mats[0].rows(), std::vector<bool>(n_bit * hash_mats.size(), false));
             for(size_t i = 0; i < hash_mats.size(); ++ i) {
                 # pragma omp parallel for
@@ -103,7 +102,7 @@ class RHPLSH {
             r_vec.clear();
             r_vec.reserve(n_table);
             while(table_cnt < n_table) {
-                MatrixXf r_tmp(n_dim, n_bit);
+                Eigen::MatrixXf r_tmp(n_dim, n_bit);
                 int n_line = 0;
                 while(n_line < n_dim) {
                     std::getline(fin, line);
@@ -127,16 +126,16 @@ class RHPLSH {
             return true;
         }
         inline int GetBitNum() {
-            return n_bit;    
+        	return n_bit;	
         }
         inline int GetTableNum() {
-            return n_table;
+        	return n_table;
         }
     private:
         int n_bit;
         int n_dim;
         int n_table;
-        std::vector<MatrixXf> r_vec;
+        std::vector<Eigen::MatrixXf> r_vec;
 };
 };
 

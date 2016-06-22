@@ -95,9 +95,9 @@ int main() {
     ITQ itq(64, 200, 1);
     p_1 = NULL;
     p_2 = NULL;
-    p_1 = new float[200 * 64];
+    p_1 = new float[64 * 1];
     p_2 = new float[64 * 1];
-    mat::Mat pca_rs(p_1, 200, 64), relax(p_2, 1, 64);
+    mat::Mat pca_rs(p_1, 1, 64), relax(p_2, 1, 64);
     itq.LoadModel("/search/dongguosheng/demos/dssm_demo/cpp/200_64_dssm.model");
     vector<vector<bool> > doc_hash = itq.Hash(h3_output, pca_rs, relax);
     vector<vector<bool> > query_hash = itq.Hash(wordvec, pca_rs, relax);
@@ -108,6 +108,11 @@ int main() {
     vector<unsigned char> bits_query = BitArray::Bool2uchar(query_hash[0]);
     int dist_tmp = BitArray::CalHammingDist(bits_doc, bits_query);
     cout << "hamming dist test: " << dist_tmp << endl;
+    uint64_t doc_hash_num, query_hash_num;
+    copy(bits_doc.begin(), bits_doc.end(), (unsigned char*)(&doc_hash_num));
+    copy(bits_query.begin(), bits_query.end(), (unsigned char*)(&query_hash_num));
+    dist_tmp = BitArray::CalHammingDist(&doc_hash_num, &query_hash_num, 1);
+    cout << "hamming dist test unit64_t: " << dist_tmp << endl;
 
     delete [] p_3;
     delete [] word_p;

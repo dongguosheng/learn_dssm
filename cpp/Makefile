@@ -3,7 +3,7 @@
 # Compiler Name
 CC		=	g++
 # Compile Flags
-CXXFLAGS=	-Wall -std=c++0x -fopenmp
+CXXFLAGS=	-Wall -std=c++0x -fopenmp -g
 # Include 
 INCLUDES=	-I.	
 # Libraries

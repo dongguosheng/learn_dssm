@@ -11,7 +11,7 @@ static unsigned char bit_count[] = {0, 1, 1, 2, 1, 2, 2, 3, 1, 2, 2, 3, 2, 3, 3,
 class BitArray {
     public:
     static inline std::vector<unsigned char> Bool2uchar(const std::vector<bool> &bits) {
-        if(bits.size() % 8 != 0)    std::cout << "bits size is " << bits.size() << std::endl;
+        // if(bits.size() % 8 != 0)    std::cout << "bits size is " << bits.size() << std::endl;
         unsigned int len = bits.size() / 8 + (bits.size() % 8 != 0 ? 1 : 0);
         std::vector<unsigned char> result(len, 0);
         unsigned char e = 0;
@@ -45,6 +45,23 @@ class BitArray {
         unsigned int dist = 0;
         for(size_t i = 0; i < a.size(); ++ i) {
             dist += bit_count[a[i] ^ b[i]];
+        }
+        return dist;
+    }
+    static inline unsigned int CalHammingDistArr(const unsigned char *a, const unsigned char *b, int size) {
+        unsigned int dist = 0;
+        for(int i = 0; i < size; ++ i) {
+            dist += bit_count[a[i] ^ b[i]];
+        }
+        return dist;
+    }
+    static inline unsigned int CalHammingDist(const uint64_t *a, const uint64_t *b, int size) {
+        unsigned int dist = 0;
+        for(int i = 0; i < size; ++ i) {
+            uint64_t tmp = a[i] ^ b[i];
+            for(size_t j = 0; j < 8; ++ j) {
+                dist += bit_count[(tmp >> (j*8)) & 0xff];
+            }
         }
         return dist;
     }
