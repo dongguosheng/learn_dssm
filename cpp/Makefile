@@ -11,13 +11,16 @@ LIBS	=	-lcblas -latlas
 # Object Files
 OBJS	=	main.o 
 # Name of Executable
-TARGET	=	test_main
+TARGET	=	test_cdssm test_sgemm
 # ---------------
 all:	$(TARGET)
 .cpp.o:
 	$(CC) $(CXXFLAGS) -fPIC $(LDFLAGS) $(INCLUDES) -c $<
 
-test_main:main.cpp
+test_cdssm:test_cdssm.cpp
+	$(CC) $(CXXFLAGS) $(INCLUDES) $< -o $@ -L/usr/lib64/atlas $(LIBS)
+
+test_sgemm:test_sgemm.cpp
 	$(CC) $(CXXFLAGS) $(INCLUDES) $< -o $@ -L/usr/lib64/atlas $(LIBS)
 
 clean:

@@ -12,37 +12,30 @@ class ITQ : public LSH {
         ITQ(size_t n_bit, size_t n_dim, size_t n_table)
             : n_bit(n_bit), n_dim(n_dim), n_table(n_table) {}
         virtual ~ITQ() {
-            for(size_t i = 0; i < p_pca_vec.size(); ++ i) {
-                delete [] p_pca_vec[i];
-                delete [] p_r_vec[i];
+            for(size_t i = 0; i < n_table; ++ i) {
+                delete [] pca_vec[i].dptr;
+                delete [] r_vec[i].dptr;
             }
         }
         bool LoadModel(const char *model_file) {
-            float *p_tmp = NULL;
-            pca_vec.reserve(n_table);
-            r_vec.reserve(n_table);
-            for(size_t i = 0; i < n_table; ++ i) {
-                p_tmp = new float[n_dim * n_bit];
-                p_pca_vec.push_back(p_tmp);
-                p_tmp = NULL;
-                p_tmp = new float[n_bit * n_bit];
-                p_r_vec.push_back(p_tmp);
-            }
+            pca_vec.resize(n_table);
+            r_vec.resize(n_table);
             FILE *fp = fopen(model_file, "rb");
             // TODO: check model file valid
             if(fp) {
                 for(size_t i = 0; i < n_table; ++ i) {
-                    fread(p_pca_vec[i], 1, sizeof(float) * n_dim * n_bit, fp);
-                    fread(p_r_vec[i], 1, sizeof(float) * n_bit * n_bit, fp);
-                    pca_vec[i].Set(p_pca_vec[i], n_dim, n_bit);
-                    r_vec[i].Set(p_r_vec[i], n_bit, n_bit);
+                    float *pca_ptr = new float[n_dim * n_bit];
+                    float *r_ptr = new float[n_bit * n_bit];
+                    fread(pca_ptr, 1, sizeof(float) * n_dim * n_bit, fp);
+                    fread(r_ptr, 1, sizeof(float) * n_bit * n_bit, fp);
+                    pca_vec[i].Set(pca_ptr, n_dim, n_bit);
+                    r_vec[i].Set(r_ptr, n_bit, n_bit);
                 }
+                fclose(fp);
                 return true;
             }
-            fclose(fp);
             return false;
         }
-
         inline const std::vector<std::vector<bool> > Hash(const mat::Mat &input, mat::Mat &pca_rs, mat::Mat &relax) {
             std::vector<std::vector<bool> > rs;
             for(size_t i = 0; i < n_table; ++ i) {
@@ -66,9 +59,7 @@ class ITQ : public LSH {
         size_t n_dim;
         size_t n_table;
         std::vector<mat::Mat> pca_vec;
-        std::vector<float*> p_pca_vec;
         std::vector<mat::Mat> r_vec;
-        std::vector<float*> p_r_vec;
         ITQ(const ITQ &other);
         ITQ& operator=(const ITQ &other);
 };

@@ -2,70 +2,57 @@
 #define DSSM_H
 
 #include "mat.h"
+#include "layers.h"
 #include <cstdio>
 #include <vector>
 
 class DSSM {
-    const static int N = 3;
     public:
         DSSM() {}
         DSSM(std::vector<size_t> _dims) : dims(_dims) {}
         virtual ~DSSM() {
-            for(size_t i = 0; i < p_params_vec.size(); ++ i) {
-                delete [] p_params_vec[i];
-            }
+            delete fc_layer1;
+            delete fc_layer2;
+            delete fc_layer3;
+            delete activation_layer;
         }
         inline void SetDims(std::vector<size_t> _dims) {
             dims = _dims;
         }
         bool LoadModel(const char *model_file) {
-            float *p_params = NULL;
-            params_vec.reserve(N * 2);
-            for(int i = 0; i < N; ++ i) {
-                p_params = new float[dims[i] * dims[i+1]];
-                p_params_vec.push_back(p_params);
-                p_params = NULL;
-                p_params = new float[dims[i+1]];
-                p_params_vec.push_back(p_params);
-            }
+            fc_layer1 = new FullyConnectedLayer(dims[0], dims[1]);
+            fc_layer2 = new FullyConnectedLayer(dims[1], dims[2]);
+            fc_layer3 = new FullyConnectedLayer(dims[2], dims[3]);
+            activation_layer = new ActivationLayer(Tanh);
             FILE *fp = fopen(model_file, "rb");
             // TODO: check model file valid
             if(fp) {
-                for(int i = 0; i < N; ++ i) {
-                    fread(p_params_vec[i*2], 1, sizeof(float) * dims[i] * dims[i+1], fp);
-                    fread(p_params_vec[i*2+1], 1, sizeof(float) * dims[i+1], fp);
-                    params_vec[i*2].Set(p_params_vec[i*2], dims[i], dims[i+1]);
-                    params_vec[i*2+1].Set(p_params_vec[i*2+1], 1, dims[i+1]);
-                }
+                fc_layer1->LoadParams(fp);
+                fc_layer2->LoadParams(fp);
+                fc_layer3->LoadParams(fp);
                 return true;
                 fclose(fp);
             }
             return false;
         }
 
-        inline const std::vector<mat::Mat> GetParams() const {
-            return params_vec;
-        }
-
-        bool Predict(const mat::Mat &input, mat::Mat &h1_output, mat::Mat &h2_output, mat::Mat &h3_output) const {
+        bool Forward(mat::Mat &input, mat::Mat &h1_output, mat::Mat &h2_output, mat::Mat &h3_output) const {
             // users have to make sure h1_output, h2_output, h3_output have enough memory.
-            // set bias
-            h1_output = params_vec[1];
-            h2_output = params_vec[3];
-            h3_output = params_vec[5];
-            // forward
-            sgemm(input, params_vec[0], h1_output);
-            sigmoid(h1_output);
-            sgemm(h1_output, params_vec[2], h2_output);
-            sigmoid(h2_output);
-            sgemm(h2_output, params_vec[4], h3_output);
-            sigmoid(h3_output);
+            fc_layer1->Forward(input, h1_output);
+            activation_layer->Forward(h1_output);
+            fc_layer2->Forward(h1_output, h2_output);
+            activation_layer->Forward(h2_output);
+            fc_layer3->Forward(h2_output, h3_output);
+            activation_layer->Forward(h3_output);
+            
             return true;
         }
 
     private:
-        std::vector<mat::Mat> params_vec;
-        std::vector<float*> p_params_vec;
+        FullyConnectedLayer *fc_layer1;
+        FullyConnectedLayer *fc_layer2;
+        FullyConnectedLayer *fc_layer3;
+        ActivationLayer *activation_layer;
         std::vector<size_t> dims;
 
         DSSM(const DSSM &other);
