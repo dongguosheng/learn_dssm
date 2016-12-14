@@ -9,20 +9,20 @@
 class CDSSM {
     public:
         CDSSM() {}
-        CDSSM(size_t n_dim, std::vector<size_t> &filter_width_vec, size_t n_feat_map, std::vector<size_t> &fc_dims)
-            : n_dim(n_dim), filter_width_vec(filter_width_vec), n_feat_map(n_feat_map), fc_dims(fc_dims) {}
+        CDSSM(size_t _n_dim, std::vector<size_t> &_filter_width_vec, size_t _n_feat_map, std::vector<size_t> &_fc_dims)
+            : n_dim(_n_dim), filter_width_vec(_filter_width_vec), n_feat_map(_n_feat_map), fc_dims(_fc_dims) {}
         virtual ~CDSSM() {
             delete conv_layer;
             delete fc_layer;
             delete activation_layer;
         }
-        inline void SetConvParams(size_t n_dim, std::vector<size_t> &filter_width_vec, size_t n_feat_map) {
-            n_dim = n_dim;
-            filter_width_vec = filter_width_vec;
-            n_feat_map = n_feat_map;
+        inline void SetConvParams(size_t _n_dim, std::vector<size_t> &_filter_width_vec, size_t _n_feat_map) {
+            n_dim = _n_dim;
+            filter_width_vec = _filter_width_vec;
+            n_feat_map = _n_feat_map;
         }
-        inline void SetFCDims(std::vector<size_t> fc_dims) {
-            fc_dims = fc_dims;
+        inline void SetFCDims(std::vector<size_t> &_fc_dims) {
+            fc_dims = _fc_dims;
         }
         bool LoadModel(const char *model_file) {
             conv_layer = new ConvLayer(n_dim, filter_width_vec, n_feat_map);

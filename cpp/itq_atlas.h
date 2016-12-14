@@ -9,14 +9,19 @@ namespace lsh {
 class ITQ : public LSH {
     public:
         ITQ() {}
-        ITQ(size_t n_bit, size_t n_dim, size_t n_table)
-            : n_bit(n_bit), n_dim(n_dim), n_table(n_table) {}
+        ITQ(size_t _n_bit, size_t _n_dim, size_t _n_table)
+            : n_bit(_n_bit), n_dim(_n_dim), n_table(_n_table) {}
         virtual ~ITQ() {
             for(size_t i = 0; i < n_table; ++ i) {
                 delete [] pca_vec[i].dptr;
                 delete [] r_vec[i].dptr;
             }
         }
+        inline void Set(size_t _n_bit, size_t _n_dim, size_t _n_table) {
+            n_bit = _n_bit;
+            n_dim = _n_dim;
+            n_table = _n_table;
+        } 
         bool LoadModel(const char *model_file) {
             pca_vec.resize(n_table);
             r_vec.resize(n_table);

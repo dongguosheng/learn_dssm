@@ -35,21 +35,24 @@ class W2V {
             }
             return result;
         }
-        inline void GetMat(const std::vector<std::string> &words, mat::Mat &words_mat, bool is_rewrite) {
+        inline bool GetMat(const std::vector<std::string> &words, mat::Mat &words_mat, bool is_rewrite) {
             std::vector<std::string> words_new;
             if (is_rewrite) {
                 words_new = GetRewrite(words);
             } else {
                 words_new = words;
             }
+            bool flag = false;
             for(size_t i = 0; i < words_new.size(); ++ i) {
                 if (vocab_map.find(words_new[i]) == vocab_map.end())    continue;
                 std::cerr << words_new[i] << "\t"; 
                 mat::Mat word_vec(syn0[vocab_map[words_new[i]]], 1, n_dim);
                 words_mat.SubMat(i, i+1).deepcopy(word_vec);
+                flag = true;
                 // std::cerr << "sub words_mat " << words_mat.ToString() << std::endl;
             }
             std::cerr << std::endl;
+            return flag;
         }
         inline std::vector<float> GetVec(const std::vector<std::string> &words, bool is_rewrite) {
             std::vector<std::string> words_new;
