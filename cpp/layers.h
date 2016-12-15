@@ -22,6 +22,15 @@ class ConvLayer {     // nlp conv only
                 delete [] bias_vec[i].dptr;
             }
         }
+        inline size_t GetDim() const {
+            return this->n_dim;
+        }
+        inline std::vector<size_t> GetFilterWidthVec() const {
+            return this->filter_width_vec;
+        }
+        inline size_t GetFeatMapNum() const {
+            return this->n_feat_map;
+        }
         inline void LoadParams(FILE *fp) {
             filter_vec.resize(filter_width_vec.size());
             for(size_t i = 0; i < filter_vec.size(); ++ i) {
@@ -97,6 +106,12 @@ class FullyConnectedLayer {
             fread(bias_ptr, 1, sizeof(float) * n_col, fp);
             weights.Set(weights_ptr, n_row, n_col);
             bias.Set(bias_ptr, 1, n_col);
+        }
+        inline size_t GetInputDim() const {
+            return this->n_row;
+        }
+        inline size_t GetOutputDim() const {
+            return this->n_col;
         }
         inline void Forward(mat::Mat &input, mat::Mat &output) {
             // doesnot care input and output

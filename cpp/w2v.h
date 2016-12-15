@@ -8,6 +8,7 @@
 #include <cstdio>
 #include <vector>
 #include <fstream>
+#include <sstream>
 
 class W2V {
     public:
@@ -20,8 +21,11 @@ class W2V {
         ~ W2V () {
             delete [] syn0.dptr;
         }
-        void inline SetDim(size_t _n_dim) {
+        inline void SetDim(size_t _n_dim) {
             n_dim = _n_dim;
+        }
+        inline size_t GetDim() const {
+            return this->n_dim;
         }
         inline std::vector<float> MaxPool(const std::vector<std::vector<float> > &features) {
             std::vector<float> result;
@@ -43,15 +47,16 @@ class W2V {
                 words_new = words;
             }
             bool flag = false;
+            std::ostringstream ss;
             for(size_t i = 0; i < words_new.size(); ++ i) {
                 if (vocab_map.find(words_new[i]) == vocab_map.end())    continue;
-                std::cerr << words_new[i] << "\t"; 
+                ss << words_new[i] << ", "; 
                 mat::Mat word_vec(syn0[vocab_map[words_new[i]]], 1, n_dim);
                 words_mat.SubMat(i, i+1).deepcopy(word_vec);
                 flag = true;
                 // std::cerr << "sub words_mat " << words_mat.ToString() << std::endl;
             }
-            std::cerr << std::endl;
+            if (flag)   fprintf(stderr, "[cdssm] %s\n", ss.str().c_str());
             return flag;
         }
         inline std::vector<float> GetVec(const std::vector<std::string> &words, bool is_rewrite) {
@@ -62,14 +67,11 @@ class W2V {
                 words_new = words;
             }
             std::vector<std::vector<float> > features;
-            std::cerr << "dssm: ";
             for(size_t i = 0; i < words_new.size(); ++ i) {
                 if (vocab_map.find(words_new[i]) == vocab_map.end())    continue;
-                std::cerr << words_new[i] << "\t"; 
                 std::vector<float> tmp_vec(syn0[vocab_map[words_new[i]]], syn0[vocab_map[words_new[i]]] + n_dim);
                 features.push_back(tmp_vec);         
             }
-            std::cerr << std::endl;
             return MaxPool(features);
         }
         // Rewrite Query Words

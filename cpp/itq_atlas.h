@@ -21,7 +21,16 @@ class ITQ : public LSH {
             n_bit = _n_bit;
             n_dim = _n_dim;
             n_table = _n_table;
-        } 
+        }
+        inline size_t GetBitNum() const {
+            return this->n_bit;
+        }
+        inline size_t GetDim() const {
+            return this->n_dim;
+        }
+        inline size_t GetTableNum() const {
+            return this->n_table;
+        }
         bool LoadModel(const char *model_file) {
             pca_vec.resize(n_table);
             r_vec.resize(n_table);

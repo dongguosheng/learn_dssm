@@ -24,6 +24,12 @@ class CDSSM {
         inline void SetFCDims(std::vector<size_t> &_fc_dims) {
             fc_dims = _fc_dims;
         }
+        inline ConvLayer* GetConvLayerPtr() const {
+            return this->conv_layer;
+        }
+        inline FullyConnectedLayer* GetFCLayerPtr() const {
+            return this->fc_layer;
+        }
         bool LoadModel(const char *model_file) {
             conv_layer = new ConvLayer(n_dim, filter_width_vec, n_feat_map);
             fc_layer = new FullyConnectedLayer(fc_dims[0], fc_dims[1]);
