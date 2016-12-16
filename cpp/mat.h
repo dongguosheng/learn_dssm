@@ -15,7 +15,7 @@ struct Mat {
     size_t n_row;
     size_t n_col;
     float *dptr;
-    Mat() {}
+    Mat() { dptr = NULL; }
     Mat(float *dptr, size_t n_row, size_t n_col) : n_row(n_row), n_col(n_col), dptr(dptr) {}
     inline void deepcopy(const Mat &mat) {
         memcpy(dptr, mat.dptr, sizeof(float) * mat.n_row * mat.n_col);
