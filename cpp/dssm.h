@@ -5,6 +5,9 @@
 #include "layers.h"
 #include <cstdio>
 #include <vector>
+#include <fstream>
+#include <sstream>
+#include <string>
 
 class DSSM {
     public:
@@ -18,6 +21,41 @@ class DSSM {
         }
         inline void SetDims(std::vector<size_t> _dims) {
             dims = _dims;
+        }
+        inline std::vector<size_t> GetDims() {
+            return dims;
+        }
+        bool Init(const char *params_file, const char *model_file) {
+            return LoadParams(params_file) && LoadModel(model_file);
+        }
+        bool LoadParams(const char *params_file) {
+            std::ifstream fin(params_file);
+            if(fin.fail()) {
+                fprintf(stderr, "%s open failed.\n", params_file);
+                return false;
+            }
+            std::string line, key;
+            size_t val;
+            while(std::getline(fin, line)) {
+                std::istringstream iss(line);
+                iss >> key;
+                if (key == "n_dims") {
+                    while(iss >> val) {
+                        dims.push_back(val);
+                        iss.ignore(32, ',');
+                    }
+                }
+            }
+            return true;
+        }
+        std::string ToString() {
+            std::ostringstream oss;
+            oss << "fc dims: (";
+            for(size_t i = 0; i < dims.size(); ++ i) {
+                oss << dims[i] << ",";
+            }
+            oss << ")";
+            return oss.str();
         }
         bool LoadModel(const char *model_file) {
             fc_layer1 = new FullyConnectedLayer(dims[0], dims[1]);

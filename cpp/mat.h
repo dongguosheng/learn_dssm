@@ -37,6 +37,9 @@ struct Mat {
         n_row = _n_row;
         n_col = _n_col;
     }
+    inline void SetRowNum(size_t _n_row) {
+        n_row = _n_row;
+    }
     inline void Reset() {
         memset(dptr, 0, sizeof(float) * n_row * n_col);
     }

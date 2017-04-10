@@ -1,4 +1,0 @@
-0. mkdir -p ./data/doc_side/
-1. mkdir -p ./data/query_side/
-2. python dssm_py2cpp.py ../../download/train_lsh/cnn_models/400w_params_2_12.npz ./data/doc_side/cdssm_doc.model ./data/query_side/cdssm_query.model
-3. python w2v_py2cpp.py

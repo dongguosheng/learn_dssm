@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <vector>
 #include <limits>
+#include <map>
 
 class ConvLayer {     // nlp conv only
     public:
@@ -59,19 +60,37 @@ class ConvLayer {     // nlp conv only
             return result;
         }
         inline void ForwardNoGemm(mat::Mat &input, mat::Mat &output) {
+            std::map<size_t, size_t> max_idx_dict;
+            ForwardNoGemm(input, output, max_idx_dict);
+        }
+        inline void ForwardNoGemm(mat::Mat &input, mat::Mat &output, std::map<size_t, size_t> &max_idx_dict) {
             // input already do padding
-            // output had enough memory   
+            // output had enough memory
             for(size_t i = 0; i < filter_width_vec.size(); ++ i) {
                 for(size_t j = 0; j < n_feat_map; ++ j) {
                     float max_num = -std::numeric_limits<float>::max();
+                    size_t max_idx = 0;
                     for(size_t k = 0; k < input.n_row - filter_width_vec[i] + 1; ++ k) {  
                         mat::Mat patch = input.SubMat(k, k + filter_width_vec[i]);
                         float result = Conv2d(patch, filter_vec[i][j]);
                         // fprintf(stderr, "%f\t", result);
-                        if (result > max_num)   max_num = result;
+                        if (result > max_num) {
+                            max_num = result;
+                            max_idx = k;
+                        }
                     }
                     // fprintf(stderr, "\n");
                     output[i][j] = max_num;
+                    // fprintf(stderr, "%lu, ", max_idx);
+                    for(size_t k = 0; k < filter_width_vec[i]; ++ k) {
+                        auto it = max_idx_dict.find(max_idx + k);
+                        if (it != max_idx_dict.end()) {
+                            max_idx_dict[max_idx + k] ++;
+                        } else {
+                            max_idx_dict[max_idx + k] = 1;    
+                        }
+                    }
+
                 }
                 // fprintf(stderr, "filter_width(%lu), output: %s\n", filter_width_vec[i], output.ToString().c_str());
                 output.SubMat(i, i+1) += bias_vec[i];

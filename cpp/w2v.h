@@ -18,6 +18,10 @@ class W2V {
             result = (LoadVocab(vocab_file) && LoadW2VBin(syn0_file) && LoadRewrite(rewrite_file));
             return result;
         }
+        bool Init(size_t n_dim, const char *vocab_file, const char *syn0_file, const char *rewrite_file) {
+            SetDim(n_dim);
+            return LoadModel(vocab_file, syn0_file, rewrite_file);
+        }
         ~ W2V () {
             delete [] syn0.dptr;
         }
@@ -39,23 +43,25 @@ class W2V {
             }
             return result;
         }
-        inline bool GetMat(const std::vector<std::string> &words, mat::Mat &words_mat, bool is_rewrite) {
-            std::vector<std::string> words_new;
-            if (is_rewrite) {
-                words_new = GetRewrite(words);
-            } else {
-                words_new = words;
-            }
+        inline bool GetMat(const std::vector<std::string> &words, mat::Mat &words_mat, std::vector<bool> &is_in_w2v) {
             bool flag = false;
             std::ostringstream ss;
-            for(size_t i = 0; i < words_new.size(); ++ i) {
-                if (vocab_map.find(words_new[i]) == vocab_map.end())    continue;
-                ss << words_new[i] << ", "; 
-                mat::Mat word_vec(syn0[vocab_map[words_new[i]]], 1, n_dim);
-                words_mat.SubMat(i, i+1).deepcopy(word_vec);
-                flag = true;
-                // std::cerr << "sub words_mat " << words_mat.ToString() << std::endl;
+            size_t i = 0, j = 0;
+            while(i < words.size()) {
+                if (vocab_map.find(words[i]) == vocab_map.end()) {
+                    is_in_w2v.push_back(false);
+                } else {
+                    is_in_w2v.push_back(true);
+                    ss << words[i] << ", ";
+                    mat::Mat word_vec(syn0[vocab_map[words[i]]], 1, n_dim);
+                    words_mat.SubMat(j, j+1).deepcopy(word_vec);
+                    ++ j;
+                    if(words[i] != "#")     flag = true;
+                }
+                ++ i;
             }
+            words_mat.SetRowNum(j);
+            // std::cerr << "sub words_mat " << words_mat.ToString() << std::endl;
             if (flag)   fprintf(stderr, "[cdssm] %s\n", ss.str().c_str());
             return flag;
         }
@@ -100,7 +106,7 @@ class W2V {
         bool LoadVocab(const char *vocab_file) {
             std::ifstream fin(vocab_file);
             if(fin.fail()) {
-                std::cerr << vocab_file << " open failed." << std::endl;
+                fprintf(stderr, "%s open failed.\n", vocab_file);
                 return false;
             }
             std::string line;
@@ -111,7 +117,7 @@ class W2V {
                 ss >> word >> idx;
                 vocab_map[word] = idx;
             }
-            std::cerr << "Total Vocab Size: " << vocab_map.size() << std::endl;
+            fprintf(stderr, "Total Vocab Size: %lu.\n", vocab_map.size());
             return true;
         }
         bool LoadW2VBin(const char *syn0_file) {
@@ -138,7 +144,7 @@ class W2V {
         bool LoadRewrite(const char *rewrite_file) {
             std::ifstream fin(rewrite_file);
             if(fin.fail()) {
-                std::cerr << rewrite_file << " open failed." << std::endl;
+                fprintf(stderr, "%s open failed.\n", rewrite_file);
                 return false;
             }
             std::string line;
@@ -170,9 +176,9 @@ class W2V {
                         break;
                 }
             }
-            std::cerr << "Total Rewrite Size: " << rewrite_map.size() << std::endl;
-            std::cerr << "Black Term Cnt: " << black_term_set.size() << std::endl;
-            std::cerr << "Save Term Cnt: " << save_term_set.size() << std::endl;
+            fprintf(stderr, "Total Rewrite Size: %lu.\n", rewrite_map.size());
+            fprintf(stderr, "Black Term Cnt: %lu.\n", black_term_set.size());
+            fprintf(stderr, "Save Term Cnt: %lu.\n", save_term_set.size());
             // for(std::tr1::unordered_map<std::string, std::vector<std::string> >::iterator iter = rewrite_map.begin(); iter != rewrite_map.end(); ++ iter) {
             //     std::cerr << iter->first << std::endl;
             //     for(size_t i = 0; i < iter->second.size(); ++ i) {

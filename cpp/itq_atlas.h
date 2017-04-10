@@ -4,6 +4,8 @@
 #include "mat.h"
 #include "lsh.h"
 #include <vector>
+#include <fstream>
+#include <sstream>
 
 namespace lsh {
 class ITQ : public LSH {
@@ -30,6 +32,27 @@ class ITQ : public LSH {
         }
         inline size_t GetTableNum() const {
             return this->n_table;
+        }
+        bool Init(const char *params_file, const char *model_file) {
+            return LoadParams(params_file) && LoadModel(model_file);
+        }
+        bool LoadParams(const char *params_file) {
+            std::ifstream fin(params_file);
+            if (fin.fail()) {
+                fprintf(stderr, "%s open failed.\n", params_file);
+                return false;
+            }
+            std::string line;
+            while(getline(fin, line)) {
+                std::istringstream iss(line);
+                std::string key;
+                size_t val;
+                iss >> key >> val;
+                if (key == "n_bit")         n_bit = val;
+                else if (key == "n_dim")    n_dim = val;
+                else if (key == "n_table") n_table = val;
+            }
+            return true;
         }
         bool LoadModel(const char *model_file) {
             pca_vec.resize(n_table);
@@ -66,6 +89,11 @@ class ITQ : public LSH {
                 rs.push_back(hash_rs);
             }
             return rs;
+        }
+        inline std::string ToString() {
+            std::ostringstream oss;
+            oss << "n_bit: " << n_bit << ", n_dim: " << n_dim << ", n_table: " << n_table;
+            return oss.str();
         }
 
     private:
