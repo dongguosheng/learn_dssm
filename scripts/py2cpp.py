@@ -29,7 +29,7 @@ def w2v_py2cpp_bin(w2v_model_file, syn0, vocab_file, syn0_file):
         for w in m.vocab:
             fout_vocab.write(w + '\t')
             fout_vocab.write(str(m.vocab[w].index) + '\n')
-        fout_vocab.write("#" + '\t' + str(m.syn0.shape[0] / m.layer1_size - 1) + '\n')
+        fout_vocab.write("#" + '\t' + str(m.syn0.shape[0] - 1) + '\n')
         fout_syn0.write(pack('I', len(m.vocab) + 1))
         print 'm.layer1 size: %d' % m.layer1_size
         fout_syn0.write(pack('I', m.layer1_size))
